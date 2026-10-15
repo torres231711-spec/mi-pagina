@@ -1,0 +1,460 @@
+              <!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Feliz Cumpleaños, Mi Plinsheshita</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body, html {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #020817;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #ffffff;
+        }
+
+        /* Pantalla de Inicio */
+        #welcome-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at center, #0B192C 0%, #020817 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            transition: opacity 1s ease;
+            padding: 20px;
+            text-align: center;
+        }
+
+        #welcome-screen h1 {
+            font-size: 1.8rem;
+            color: #93C5FD;
+            margin-bottom: 30px;
+            text-shadow: 0 0 15px rgba(59, 130, 246, 0.6);
+            line-height: 1.4;
+        }
+
+        .btn-continue {
+            background: linear-gradient(135deg, #3B82F6, #1D4ED8);
+            color: white;
+            border: none;
+            padding: 14px 35px;
+            font-size: 1.1rem;
+            border-radius: 30px;
+            cursor: pointer;
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .btn-continue:active {
+            transform: scale(0.95);
+        }
+
+        /* Contenedor principal de la Galaxia 3D */
+        #universe {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            perspective: 1000px;
+            opacity: 0;
+            transition: opacity 1.5s ease;
+            overflow: hidden;
+        }
+
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Contenedor con perspectiva 3D para el corazón y frases */
+        .scene-3d {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            transform-style: preserve-3d;
+        }
+
+        /* Elementos flotantes 3D (Frases) */
+        .orbit-item {
+            position: absolute;
+            cursor: pointer;
+            padding: 8px 14px;
+            background: rgba(15, 23, 42, 0.85);
+            border: 1px solid rgba(96, 165, 250, 0.5);
+            border-radius: 20px;
+            font-size: 0.85rem;
+            color: #E0F2FE;
+            white-space: nowrap;
+            box-shadow: 0 0 12px rgba(59, 130, 246, 0.4);
+            transition: background 0.3s, transform 0.1s;
+            user-select: none;
+            z-index: 10;
+            transform: translate(-50%, -50%);
+        }
+
+        .orbit-item:hover {
+            background: rgba(30, 58, 138, 0.95);
+            border-color: #93C5FD;
+        }
+
+        /* Tarjeta emergente al tocar una frase */
+        #modal-card {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            width: 85%;
+            max-width: 360px;
+            background: rgba(11, 25, 44, 0.95);
+            border: 2px solid #3B82F6;
+            border-radius: 20px;
+            padding: 25px;
+            text-align: center;
+            z-index: 200;
+            box-shadow: 0 0 30px rgba(59, 130, 246, 0.6);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        #modal-card.active {
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        #modal-card h3 {
+            color: #93C5FD;
+            font-size: 1.3rem;
+            margin-bottom: 12px;
+        }
+
+        #modal-card p {
+            color: #E2E8F0;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            margin-bottom: 20px;
+        }
+
+        .btn-close {
+            background: #2563EB;
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        /* Botón para ver la carta final */
+        #btn-letter {
+            position: absolute;
+            bottom: 25px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(30, 58, 138, 0.8);
+            border: 1px solid #60A5FA;
+            color: #E0F2FE;
+            padding: 10px 22px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            z-index: 20;
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.4);
+        }
+
+        /* Modal de la Carta Final */
+        #letter-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(2, 8, 23, 0.92);
+            z-index: 300;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
+            padding: 20px;
+        }
+
+        #letter-modal.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .letter-content {
+            background: #0B192C;
+            border: 2px solid #3B82F6;
+            border-radius: 20px;
+            width: 100%;
+            max-width: 420px;
+            max-height: 85vh;
+            overflow-y: auto;
+            padding: 25px;
+            box-shadow: 0 0 40px rgba(59, 130, 246, 0.4);
+            text-align: left;
+        }
+
+        .letter-content h2 {
+            color: #93C5FD;
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .letter-content p {
+            color: #CBD5E1;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        .letter-close-container {
+            text-align: center;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Pantalla de Inicio -->
+    <div id="welcome-screen">
+        <h1>feliz cumpleaños mi plinsheshita hemosha 👑 🥺 🩵</h1>
+        <button class="btn-continue" id="start-btn">Continuar</button>
+    </div>
+
+    <!-- Universo / Galaxia Azul 3D -->
+    <div id="universe">
+        <canvas id="galaxyCanvas"></canvas>
+        <div class="scene-3d" id="scene3d">
+            <div id="phrases-container"></div>
+        </div>
+        <button id="btn-letter">💌 Leer mi cartita</button>
+    </div>
+
+    <!-- Tarjeta Interactiva para Frases -->
+    <div id="modal-card">
+        <h3 id="modal-title">Para ti</h3>
+        <p id="modal-text">Texto de la frase</p>
+        <button class="btn-close" onclick="closeModal()">Cerrar</button>
+    </div>
+
+    <!-- Modal con la Carta Final -->
+    <div id="letter-modal">
+        <div class="letter-content">
+            <h2>Feliz cumpleaños, mi plinsheshita hemosha 👑🩵🥺</h2>
+            <p>Mi amor espero de todo corazón que hoy tengas un día muy bonito, que sonrías muchísimo y que la vida te regale muchos años más llenos de felicidad. Ojalá pudiera estar ahí contigo para abrazarte muy fuerte, llenarte de besitos y consentirte como te mereces, mi chiquita. 🥹🩵!</p>
+            <p>Quiero que sepas que, a pesar de los problemas que hemos tenido y de los momentos difíciles, sigues siendo la única persona con la que quiero estar. Porque, aunque a veces las cosas no sean fáciles, lo que siento por ti es demasiado bonito y no quiero que la distancia ni las dificultades nos hagan olvidar todo el amor que nos tenemos. Te amo demasiado mi niña, más de lo que a veces sé explicar con palabras. 🥺🩵!!!</p>
+            <p>Mi preciosa no sabes cuánto anhelo que llegue el próximo año para poder verte por fin, abrazarte y tenerte cerquita de mí, es algo que deseo muchísimo, porque después de casi un año conociéndonos al fin podre mirarte a los ojos fijamente y desirte cuánto te amo, y podré abrazarte muy fuerte sería uno de los momentos más bonitos de mi vida. 🩵🥹!!!</p>
+            <p>Quiero seguir compartiendo momentos contigo, seguir conociéndote cada día más, aprender de nuestros errores y demostrarte que incluso cuando tengamos problemas, mi amor por ti sigue aquí y no cambia ni un poquito. No quiero que todo sea perfecto mi amor, solamente quiero que nunca nos falten las ganas de entendernos, cuidarnos y seguir eligiéndonos. 👑🩵!!!</p>
+            <p>Gracias por existir y por ser esa personita tan especial para mí. Espero que hoy te sientas muy amada, porque de verdad mereces todo lo bonito de este mundo 🌎. Y ojalá la vida me dé la oportunidad de celebrar muchos cumpleaños más contigo, mi niña hermosa. 🥹🩵!!</p>
+            <div class="letter-close-container">
+                <button class="btn-close" id="close-letter">Cerrar carta</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const phrases = [
+            "mi plinsheshita hemosha 👑🥺🩵",
+            "mi vida 🥺",
+            "mi amor",
+            "mi mujercita🥺",
+            "mi berrinchuda🥺",
+            "mi chiquita 🥺",
+            "mi preciosa 🥺",
+            "me encantas🥺",
+            "mi consentida 🥺",
+            "mi amorchita🥺"
+        ];
+
+        const startBtn = document.getElementById('start-btn');
+        const welcomeScreen = document.getElementById('welcome-screen');
+        const universe = document.getElementById('universe');
+        const phrasesContainer = document.getElementById('phrases-container');
+        const modalCard = document.getElementById('modal-card');
+        const modalTitle = document.getElementById('modal-title');
+        const modalText = document.getElementById('modal-text');
+        const btnLetter = document.getElementById('btn-letter');
+        const letterModal = document.getElementById('letter-modal');
+        const closeLetter = document.getElementById('close-letter');
+
+        startBtn.addEventListener('click', () => {
+            welcomeScreen.style.opacity = '0';
+            setTimeout(() => {
+                welcomeScreen.style.display = 'none';
+                universe.style.opacity = '1';
+                initGalaxyAnd3D();
+            }, 1000);
+        });
+
+        // Crear los elementos de texto en órbita 3D
+        const phraseElements = [];
+        phrases.forEach((phrase, index) => {
+            const div = document.createElement('div');
+            div.className = 'orbit-item';
+            div.innerText = phrase;
+
+            div.addEventListener('click', () => {
+                modalTitle.innerText = "Para ti, mi amor";
+                modalText.innerText = phrase + " ✨ Cada latido de mi corazón te pertenece.";
+                modalCard.classList.add('active');
+            });
+
+            phrasesContainer.appendChild(div);
+            phraseElements.push({ element: div, angle: (index / phrases.length) * Math.PI * 2 });
+        });
+
+        function closeModal() {
+            modalCard.classList.remove('active');
+        }
+
+        btnLetter.addEventListener('click', () => {
+            letterModal.classList.add('active');
+        });
+
+        closeLetter.addEventListener('click', () => {
+            letterModal.classList.remove('active');
+        });
+
+        // Configuración de la Galaxia 3D y Animación del Corazón
+        function initGalaxyAnd3D() {
+            const canvas = document.getElementById('galaxyCanvas');
+            const ctx = canvas.getContext('2d');
+
+            let width = canvas.width = window.innerWidth;
+            let height = canvas.height = window.innerHeight;
+
+            window.addEventListener('resize', () => {
+                width = canvas.width = window.innerWidth;
+                height = canvas.height = window.innerHeight;
+            });
+
+            // Estrellas de fondo 3D en tonos azules
+            const stars = [];
+            const numStars = 350;
+            const blueTones = ['#3B82F6', '#60A5FA', '#93C5FD', '#1D4ED8', '#BFDBFE', '#ffffff'];
+
+            for (let i = 0; i < numStars; i++) {
+                stars.push({
+                    x: (Math.random() - 0.5) * width * 2,
+                    y: (Math.random() - 0.5) * height * 2,
+                    z: Math.random() * width,
+                    size: Math.random() * 2 + 0.5,
+                    color: blueTones[Math.floor(Math.random() * blueTones.length)]
+                });
+            }
+
+            let heartScaleTime = 0;
+            let orbitAngle = 0;
+
+            function animate() {
+                ctx.fillStyle = '#020817';
+                ctx.fillRect(0, 0, width, height);
+
+                const cx = width / 2;
+                const cy = height / 2;
+
+                // 1. Movimiento de estrellas en profundidad 3D
+                stars.forEach(star => {
+                    star.z -= 0.8;
+                    if (star.z <= 0) star.z = width;
+
+                    const k = 300 / star.z;
+                    const px = star.x * k + cx;
+                    const py = star.y * k + cy;
+
+                    if (px >= 0 && px <= width && py >= 0 && py <= height) {
+                        const pSize = Math.max(0.1, star.size * k);
+                        ctx.fillStyle = star.color;
+                        ctx.beginPath();
+                        ctx.arc(px, py, pSize, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                });
+
+                // 2. Animación de latido del corazón central (escala oscilante)
+                heartScaleTime += 0.05;
+                const currentHeartScale = 0.85 + Math.sin(heartScaleTime * 2) * 0.1;
+
+                // Dibujar el corazón central con efecto 3D
+                drawBlueHeart(ctx, cx, cy - 40, currentHeartScale);
+
+                // 3. Actualizar posiciones de las frases flotando alrededor del corazón en 3D
+                orbitAngle += 0.005;
+                phraseElements.forEach((item, index) => {
+                    item.angle += 0.008; // Velocidad de rotación de cada frase
+                    
+                    // Radio de la órbita 3D alrededor del centro
+                    const radiusX = Math.min(width * 0.38, 180);
+                    const radiusY = 70; // Aplana la órbita para dar efecto de perspectiva inclinada 3D
+
+                    const x = Math.cos(item.angle) * radiusX;
+                    const y = Math.sin(item.angle) * radiusY - 40;
+                    
+                    // Efecto de profundidad (z-index y escala simulada según la posición en el eje Z)
+                    const zPos = Math.sin(item.angle); // De -1 a 1
+                    const scale3d = 0.85 + (zPos + 1) * 0.15; // Más grande enfrente, más pequeño atrás
+                    const opacity3d = 0.4 + (zPos + 1) * 0.3; // Más transparente atrás
+
+                    item.element.style.transform = `translate(-50%, -50%) translate(${x}px, ${y}px) scale(${scale3d})`;
+                    item.element.style.opacity = opacity3d;
+                    item.element.style.zIndex = Math.floor((zPos + 1) * 50); // Cambia el orden de capas en pantalla
+                });
+
+                requestAnimationFrame(animate);
+            }
+
+            animate();
+        }
+
+        function drawBlueHeart(ctx, x, y, scaleFactor) {
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.scale(scaleFactor, scaleFactor);
+            
+            // Brillo intenso azul para el corazón
+            ctx.shadowBlur = 30;
+            ctx.shadowColor = '#3B82F6';
+
+            ctx.beginPath();
+            let scale = 15;
+            
+            for (let i = 0; i < Math.PI * 2; i += 0.05) {
+                let hx = scale * 16 * Math.pow(Math.sin(i), 3);
+                let hy = -scale * (13 * Math.cos(i) - 5 * Math.cos(2*i) - 2 * Math.cos(3*i) - Math.cos(4*i));
+                if (i === 0) ctx.moveTo(hx, hy);
+                else ctx.lineTo(hx, hy);
+            }
+            
+            ctx.closePath();
+            
+            let gradient = ctx.createRadialGradient(0, 0, 5, 0, 0, 100);
+            gradient.addColorStop(0, '#93C5FD');
+            gradient.addColorStop(0.5, '#3B82F6');
+            gradient.addColorStop(1, '#1D4ED8');
+            
+            ctx.fillStyle = gradient;
+            ctx.fill();
+            ctx.restore();
+        }
+    </script>
+</body>
+</html>
